@@ -126,12 +126,24 @@ def tracking_confirmation(request, tracking_id):
     return render(request, 'logistics/confirmation.html', context)
 
 
-@csrf_exempt
 def admin_console(request):
     """Hidden admin console for shipment management"""
     if request.method == 'GET':
-        shipments = Shipment.objects.all().order_by('-created_at')
-        return render(request, 'logistics/admin_console.html', {'shipments': shipments})
+        shipments = Shipment.objects.prefetch_related('fees', 'history').all().order_by('-created_at')
+        
+        total_shipments = shipments.count()
+        active_shipments = shipments.exclude(status='delivered').count()
+        fee_required_count = shipments.filter(fee_required=True).count()
+        delivered_count = shipments.filter(status='delivered').count()
+        
+        context = {
+            'shipments': shipments,
+            'total_shipments': total_shipments,
+            'active_shipments': active_shipments,
+            'fee_required_count': fee_required_count,
+            'delivered_count': delivered_count,
+        }
+        return render(request, 'logistics/admin_console.html', context)
     
     elif request.method == 'POST':
         action = request.POST.get('action')
@@ -158,6 +170,14 @@ def admin_console(request):
                 description='Shipment label created'
             )
             
+            if shipment.fee_required and float(request.POST.get('fee_amount', 0)) > 0:
+                ShipmentFee.objects.create(
+                    shipment=shipment,
+                    name='Import Duty',
+                    amount=request.POST.get('fee_amount'),
+                    description='Import processing fee'
+                )
+            
             return redirect('admin_console')
         
         elif action == 'update_shipment':
@@ -173,13 +193,33 @@ def admin_console(request):
                     shipment=shipment,
                     status=new_status,
                     location=new_location,
-                    description=f'Status updated to {new_status}'
+                    description=f'Status updated to {shipment.get_status_display()}'
                 )
             
             shipment.current_location = new_location
             shipment.fee_required = request.POST.get('fee_required') == 'on'
             shipment.fee_amount = request.POST.get('fee_amount', shipment.fee_amount)
             shipment.save()
+            
+            return redirect('admin_console')
+        
+        elif action == 'add_fee':
+            shipment_id = request.POST.get('shipment_id')
+            shipment = get_object_or_404(Shipment, id=shipment_id)
+            
+            ShipmentFee.objects.create(
+                shipment=shipment,
+                name=request.POST.get('fee_name'),
+                amount=request.POST.get('fee_amount'),
+                description=request.POST.get('fee_description', '')
+            )
+            
+            return redirect('admin_console')
+        
+        elif action == 'delete_shipment':
+            shipment_id = request.POST.get('shipment_id')
+            shipment = get_object_or_404(Shipment, id=shipment_id)
+            shipment.delete()
             
             return redirect('admin_console')
     
