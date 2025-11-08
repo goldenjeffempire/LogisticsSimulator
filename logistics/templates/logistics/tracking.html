@@ -36,6 +36,62 @@
         0%, 100% { box-shadow: 0 0 20px rgba(0, 191, 255, 0.4); }
         50% { box-shadow: 0 0 40px rgba(0, 191, 255, 0.8); }
     }
+    
+    .fee-exception-banner {
+        animation: severe-pulse 2s ease-in-out infinite, shake 3s ease-in-out infinite;
+        box-shadow: 0 0 60px rgba(255, 0, 0, 0.6);
+    }
+    
+    @keyframes severe-pulse {
+        0%, 100% { 
+            transform: scale(1);
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.4), 0 0 80px rgba(255, 100, 0, 0.3);
+        }
+        50% { 
+            transform: scale(1.02);
+            box-shadow: 0 0 80px rgba(255, 0, 0, 0.8), 0 0 120px rgba(255, 100, 0, 0.6);
+        }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+    }
+    
+    .progress-container {
+        position: relative;
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #00bfff 0%, #6366f1 50%, #ec4899 100%);
+        border-radius: 999px;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+        animation: progress-shimmer 2s infinite;
+    }
+    
+    @keyframes progress-shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
 </style>
 {% endblock %}
 
@@ -143,20 +199,22 @@
     <div class="max-w-6xl mx-auto">
         
         {% if shipment.fee_required %}
-        <div class="urgency-banner rounded-2xl p-8 mb-8 text-center relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50"></div>
+        <div class="fee-exception-banner urgency-banner rounded-2xl p-10 mb-8 text-center relative overflow-hidden border-4 border-red-500">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50 animate-pulse"></div>
+            <div class="absolute top-0 left-0 w-full h-1 bg-yellow-400 animate-pulse"></div>
+            <div class="absolute bottom-0 left-0 w-full h-1 bg-yellow-400 animate-pulse"></div>
             <div class="relative z-10">
-                <div class="flex items-center justify-center gap-3 mb-3">
-                    <svg class="w-8 h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                <div class="flex items-center justify-center gap-4 mb-4">
+                    <svg class="w-12 h-12 text-yellow-300 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
-                    <p class="text-white font-bold text-2xl">ACTION REQUIRED</p>
-                    <svg class="w-8 h-8 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    <p class="text-white font-black text-4xl tracking-wider">⚠ HOLD: ACTION REQUIRED ⚠</p>
+                    <svg class="w-12 h-12 text-yellow-300 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                     </svg>
                 </div>
-                <p class="text-white text-lg mb-2">Unsettled Import Duty / Processing Fee</p>
-                <p class="text-white/90">Immediate payment required to release shipment for delivery</p>
+                <p class="text-white text-2xl font-bold mb-3 animate-pulse">Unsettled Import Duty / Processing Fee</p>
+                <p class="text-white/95 text-lg">Immediate payment required to release shipment for delivery</p>
             </div>
         </div>
         {% endif %}
@@ -223,12 +281,35 @@
             </div>
         </div>
         
-        <div class="glass-morphism rounded-3xl p-10 mb-8">
+        <div class="glass-morphism rounded-3xl p-10 mb-8" 
+             x-data="{
+                 getProgress() {
+                     const statuses = ['label_created', 'picked_up', 'in_transit', 'arrived_facility', 'out_for_delivery', 'delivered'];
+                     const currentStatus = '{{ shipment.status }}';
+                     const index = statuses.indexOf(currentStatus);
+                     return index >= 0 ? ((index + 1) / statuses.length) * 100 : 0;
+                 }
+             }">
             <div class="flex items-center justify-between mb-8">
                 <h2 class="text-3xl font-bold gradient-text">Shipment Timeline</h2>
                 <div class="flex items-center gap-2 px-4 py-2 bg-green-900/30 rounded-lg">
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                     <span class="text-sm text-green-300 font-semibold">Live Tracking</span>
+                </div>
+            </div>
+            
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-semibold text-gray-400">Progress</span>
+                    <span class="text-sm font-bold text-blue-400" x-text="Math.round(getProgress()) + '%'"></span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" :style="'width: ' + getProgress() + '%'"></div>
+                </div>
+                <div class="flex justify-between mt-3 text-xs text-gray-500">
+                    <span>Label Created</span>
+                    <span>In Transit</span>
+                    <span>Delivered</span>
                 </div>
             </div>
             
