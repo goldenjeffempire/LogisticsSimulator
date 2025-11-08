@@ -1392,140 +1392,140 @@
             const obfuscatedLocation = obfuscateData(AppData.location);
 
             return `
-                <div class="min-h-screen py-8">
-                    <div class="urgency-banner text-white py-6 px-8 text-center font-bold text-lg md:text-xl shadow-2xl sticky top-0 z-50">
+                <div class="min-h-screen" style="background: linear-gradient(180deg, #ef4444 0%, #dc2626 50%, #991b1b 100%);">
+                    <div class="bg-red-600 text-white py-6 px-4 md:px-8 text-center font-bold text-base md:text-xl shadow-2xl sticky top-0 z-50">
                         <div class="container mx-auto flex items-center justify-center space-x-3">
-                            <svg class="w-8 h-8 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-6 h-6 md:w-8 md:h-8 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                             </svg>
-                            <span>IMMEDIATE ACTION REQUIRED: Shipment ID ${AppData.trackingID} is on hold</span>
+                            <span class="text-sm md:text-lg">ACTION REQUIRED: Shipment ${AppData.trackingID} on hold</span>
                         </div>
                     </div>
 
-                    <div class="container mx-auto px-4 md:px-8 py-12">
-                        <button onclick="changeView('landing')" class="mb-8 text-gray-400 hover:text-blue-400 transition flex items-center space-x-2 group">
+                    <div class="container mx-auto px-4 md:px-8 py-8 md:py-12">
+                        <button onclick="changeView('landing')" class="mb-6 md:mb-8 text-white hover:text-red-100 transition flex items-center space-x-2 group">
                             <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                             </svg>
-                            <span>Back to Tracking</span>
+                            <span class="font-medium">Back to Home</span>
                         </button>
 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="glass-morphism-strong rounded-3xl p-8 scroll-reveal card-3d">
-                                <h2 class="text-3xl md:text-4xl font-bold mb-8 gradient-text">Shipment Details</h2>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                            <div class="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl scroll-reveal">
+                                <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900">Shipment Details</h2>
                                 
                                 <div class="space-y-4">
-                                    <div class="flex justify-between items-center py-4 border-b border-gray-700">
-                                        <span class="text-gray-400 text-sm uppercase tracking-wider">Tracking ID</span>
-                                        <span class="font-bold text-lg">${AppData.trackingID}</span>
+                                    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+                                        <span class="text-gray-600 text-sm font-medium uppercase tracking-wider">Tracking ID</span>
+                                        <span class="font-bold text-gray-900">${AppData.trackingID}</span>
                                     </div>
-                                    <div class="flex justify-between items-center py-4 border-b border-gray-700">
-                                        <span class="text-gray-400 text-sm uppercase tracking-wider">Status</span>
-                                        <span class="font-bold text-red-400 text-lg">${AppData.status}</span>
+                                    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+                                        <span class="text-gray-600 text-sm font-medium uppercase tracking-wider">Status</span>
+                                        <span class="font-bold text-red-600">${AppData.status}</span>
                                     </div>
-                                    <div class="flex justify-between items-center py-4 border-b border-gray-700">
-                                        <span class="text-gray-400 text-sm uppercase tracking-wider">Recipient</span>
-                                        <span class="font-medium">${obfuscatedName}</span>
+                                    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+                                        <span class="text-gray-600 text-sm font-medium uppercase tracking-wider">Recipient</span>
+                                        <span class="font-medium text-gray-900">${obfuscatedName}</span>
                                     </div>
-                                    <div class="flex justify-between items-center py-4 border-b border-gray-700">
-                                        <span class="text-gray-400 text-sm uppercase tracking-wider">Destination</span>
-                                        <span class="font-medium text-sm text-right">${obfuscatedLocation}</span>
+                                    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+                                        <span class="text-gray-600 text-sm font-medium uppercase tracking-wider">Destination</span>
+                                        <span class="font-medium text-gray-900 text-sm text-right">${obfuscatedLocation}</span>
                                     </div>
                                     <div class="flex justify-between items-center py-4">
-                                        <span class="text-gray-400 text-sm uppercase tracking-wider">Fees Required</span>
-                                        <span class="font-bold text-3xl gradient-text">$${totalFees.toFixed(2)}</span>
+                                        <span class="text-gray-600 text-sm font-medium uppercase tracking-wider">Fees Required</span>
+                                        <span class="font-bold text-3xl text-red-600">$${totalFees.toFixed(2)}</span>
                                     </div>
                                 </div>
 
-                                <div class="mt-8 animated-border rounded-2xl p-6 bg-red-900 bg-opacity-20">
+                                <div class="mt-8 border-2 border-red-500 rounded-2xl p-6 bg-red-50">
                                     <div class="flex items-start space-x-3 mb-4">
-                                        <svg class="w-8 h-8 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg class="w-8 h-8 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                         </svg>
                                         <div>
-                                            <h3 class="font-bold text-lg mb-2 text-red-300">Action Required</h3>
-                                            <p class="text-sm text-gray-300 mb-4">
+                                            <h3 class="font-bold text-lg mb-2 text-red-800">Action Required</h3>
+                                            <p class="text-sm text-gray-700 mb-4">
                                                 Your shipment is currently on hold due to outstanding fees. Please resolve 
-                                                <span class="font-bold text-white text-lg">$${totalFees.toFixed(2)}</span> in fees to clear delivery protocol and expedite your shipment.
+                                                <span class="font-bold text-red-600 text-lg">$${totalFees.toFixed(2)}</span> in fees to clear delivery and expedite your shipment.
                                             </p>
                                         </div>
                                     </div>
-                                    <button onclick="changeView('payment')" class="w-full btn-magnetic text-white font-bold py-4 px-6 rounded-xl text-lg">
+                                    <button onclick="changeView('payment')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition transform hover:scale-105 shadow-lg">
                                         Resolve Fees & Clear Shipment →
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="glass-morphism-strong rounded-3xl p-8 scroll-reveal card-3d">
-                                <h2 class="text-3xl md:text-4xl font-bold mb-8 gradient-text">Shipment Timeline</h2>
+                            <div class="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl scroll-reveal">
+                                <h2 class="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900">Shipment Timeline</h2>
                                 
                                 <div class="relative" id="timeline">
-                                    <div class="timeline-line"></div>
+                                    <div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                                     
-                                    <div class="space-y-8 relative">
+                                    <div class="space-y-6 relative">
                                         <div class="timeline-step flex items-start space-x-4 relative z-10">
-                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 electric-glow">
+                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                                                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                                 </svg>
                                             </div>
-                                            <div class="flex-1 pb-8">
-                                                <div class="font-bold text-lg">Package Received</div>
-                                                <div class="text-sm text-gray-400 mt-1">Origin facility - Nov 4, 2024 08:23 AM</div>
-                                                <div class="text-xs text-gray-500 mt-2">Processing complete</div>
+                                            <div class="flex-1 pb-6">
+                                                <div class="font-bold text-lg text-gray-900">Package Received</div>
+                                                <div class="text-sm text-gray-600 mt-1">Origin facility - Nov 4, 2024 08:23 AM</div>
+                                                <div class="text-xs text-gray-500 mt-1">Processing complete</div>
                                             </div>
                                         </div>
 
                                         <div class="timeline-step flex items-start space-x-4 relative z-10">
-                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 electric-glow">
+                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                                                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                                 </svg>
                                             </div>
-                                            <div class="flex-1 pb-8">
-                                                <div class="font-bold text-lg">In Transit</div>
-                                                <div class="text-sm text-gray-400 mt-1">International hub - Nov 5, 2024 02:15 PM</div>
-                                                <div class="text-xs text-gray-500 mt-2">Flight departed on schedule</div>
+                                            <div class="flex-1 pb-6">
+                                                <div class="font-bold text-lg text-gray-900">In Transit</div>
+                                                <div class="text-sm text-gray-600 mt-1">International hub - Nov 5, 2024 02:15 PM</div>
+                                                <div class="text-xs text-gray-500 mt-1">Flight departed on schedule</div>
                                             </div>
                                         </div>
 
                                         <div class="timeline-step flex items-start space-x-4 relative z-10">
-                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 electric-glow">
+                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                                                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                                 </svg>
                                             </div>
-                                            <div class="flex-1 pb-8">
-                                                <div class="font-bold text-lg">Customs Clearance</div>
-                                                <div class="text-sm text-gray-400 mt-1">Port of entry - Nov 6, 2024 09:47 AM</div>
-                                                <div class="text-xs text-gray-500 mt-2">Documentation approved</div>
+                                            <div class="flex-1 pb-6">
+                                                <div class="font-bold text-lg text-gray-900">Customs Clearance</div>
+                                                <div class="text-sm text-gray-600 mt-1">Port of entry - Nov 6, 2024 09:47 AM</div>
+                                                <div class="text-xs text-gray-500 mt-1">Documentation approved</div>
                                             </div>
                                         </div>
 
                                         <div class="timeline-step flex items-start space-x-4 relative z-10">
-                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 electric-glow">
+                                            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                                                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                                 </svg>
                                             </div>
-                                            <div class="flex-1 pb-8">
-                                                <div class="font-bold text-lg">Arrived at Distribution Center</div>
-                                                <div class="text-sm text-gray-400 mt-1">Dallas facility - Nov 7, 2024 11:20 AM</div>
-                                                <div class="text-xs text-gray-500 mt-2">Package scanned and logged</div>
+                                            <div class="flex-1 pb-6">
+                                                <div class="font-bold text-lg text-gray-900">Arrived at Distribution Center</div>
+                                                <div class="text-sm text-gray-600 mt-1">Dallas facility - Nov 7, 2024 11:20 AM</div>
+                                                <div class="text-xs text-gray-500 mt-1">Package scanned and logged</div>
                                             </div>
                                         </div>
 
                                         <div class="timeline-step flex items-start space-x-4 relative z-10">
-                                            <div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 animate-pulse neon-glow">
+                                            <div class="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0 animate-pulse shadow-lg">
                                                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
                                             </div>
                                             <div class="flex-1">
-                                                <div class="font-bold text-lg text-red-400">Processing Hold - Fee Required</div>
-                                                <div class="text-sm text-gray-400 mt-1">Awaiting payment - Nov 8, 2024 08:15 AM</div>
-                                                <div class="text-sm text-red-300 mt-3 font-bold">Outstanding balance: $${totalFees.toFixed(2)}</div>
-                                                <div class="mt-3 text-xs text-gray-500">Clear fees to resume delivery processing</div>
+                                                <div class="font-bold text-lg text-red-600">Processing Hold - Fee Required</div>
+                                                <div class="text-sm text-gray-600 mt-1">Awaiting payment - Nov 8, 2024 08:15 AM</div>
+                                                <div class="text-sm text-red-600 mt-2 font-bold">Outstanding balance: $${totalFees.toFixed(2)}</div>
+                                                <div class="mt-2 text-xs text-gray-500">Clear fees to resume delivery processing</div>
                                             </div>
                                         </div>
                                     </div>

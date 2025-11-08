@@ -1,4 +1,4 @@
-modules = ["web"]
+modules = ["web", "python-3.11"]
 [agent]
 expertMode = true
 
@@ -33,6 +33,10 @@ externalPort = 80
 [[ports]]
 localPort = 32905
 externalPort = 3000
+
+[[ports]]
+localPort = 38293
+externalPort = 3001
 
 [nix]
 channel = "stable-25_05"
