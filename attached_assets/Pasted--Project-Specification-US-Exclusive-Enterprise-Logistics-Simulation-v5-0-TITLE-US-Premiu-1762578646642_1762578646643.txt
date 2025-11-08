@@ -1,0 +1,96 @@
+# Project Specification: US-Exclusive Enterprise Logistics Simulation (v5.0)
+
+## **TITLE**
+US Premium Logistics Resolution Interface (Django/HTMX/Alpine)
+
+## 🚀 HIGH-LEVEL OBJECTIVE
+Build a **production-ready, enterprise-grade logistics simulation platform**, designed as a **US-exclusive courier interface** with:  
+- Premium, realistic, and highly interactive UX  
+- Visual perfection, advanced interactivity, and simulated operational realism  
+
+## 📦 DELIVERABLES
+- Complete, self-contained **Django project**  
+- Deployable via **ASGI/WSGI**  
+- Frontend assets delivered via **Django templates**, enhanced with **HTMX/Alpine.js**  
+
+---
+
+## 1. Technological Stack and Architecture
+
+| Layer                | Technology                       | Rationale                                                                                  |
+|----------------------|---------------------------------|--------------------------------------------------------------------------------------------|
+| Backend              | Django + Django REST Framework  | Core application logic, routing, data management, secure endpoint simulation               |
+| Frontend Rendering   | Django Templates                | Server-side rendering (SSR) of all views                                                  |
+| Interactivity        | HTMX + Alpine.js                | SPA-like behavior without heavy frontend frameworks; HTMX swaps components, Alpine handles micro-interactions & state |
+| Styling              | Tailwind CSS                    | Clean, responsive, high-fidelity styling emphasizing visual hierarchy & layered depth     |
+| Real-time            | Django Channels (WebSockets)    | Simulate live shipment updates and chat interface                                         |
+| Data Persistence     | SQLite (for simulation)         | Local database for simulated shipment persistence                                         |
+
+---
+
+## 2. Design and User Experience (UX/UI Mandate)
+
+### 2.1 Visual and Interactive Mandates
+- **Aesthetic:** Premium, authoritative US logistics brand feel  
+  - Deep metallic blues/greys + electric blue/crimson accents  
+- **Advanced UI/UX:**  
+  - Layered depth (complex shadows, Z-indexing)  
+  - Micro-interactions (subtle transforms, opacity shifts on hover)  
+  - Fluid CSS animations on all key elements  
+- **Performance:** Fully mobile-first, adaptive, and SPA-like interactivity  
+
+### 2.2 Dynamic Landing Page Features (View 1.0)
+- **Dynamic Hero:** Animated background gradients or geometric overlays  
+- **Interactive US Map:** Stylized SVG or CSS map highlighting simulated domestic hubs  
+- **Live Status Ticker:** Auto-scrolling horizontal feed of micro-updates  
+  - Example: "Package departed Chicago"  
+  - Example: "Service advisory update"  
+
+---
+
+## 3. Core Operational Workflows
+
+### 3.1 Administration Console (View 5.0 - Hidden Access)
+- **Access:** Triggered via a discreet client-side mechanism (e.g., triple-click on logo or secret footer icon)  
+- **Functionality:**  
+  1. **New Shipment Registration:**  
+     - Form to capture Parcel Owner Details  
+     - **Tracking ID Generation (MANDATORY):** Automatically generate unique ID (e.g., `US-9000-TKG-123456`)  
+     - Initial status: `'Label Created'`  
+     - Persist in simulated database  
+  2. **Status Management:**  
+     - Update shipment status, location, and toggle `fee_required` state  
+
+### 3.2 Tracking Status and Resolution (View 2.0 & 3.0)
+- **Tracking Validation:** ID must exist in database  
+- **Interactive Timeline:** Stepped, animated progress bar simulating real-time updates per session  
+- **Exception Banner:** If `fee_required = true`  
+  - High-impact, layered banner with pulsing animation  
+  - Message: `"HOLD: Action Required - Unsettled Import Duty/Processing Fee"`  
+
+### 3.3 Fee Processing Gateway (View 3.0)
+- **Financial Mandate:** Display outstanding settlement amount: `$80.00`  
+- **Urgency Protocol:** 5-minute countdown with severe pulsing animation  
+- **Payment Realism:**  
+  - Input masking for card number  
+  - Dynamic display of card icons (SVG/CSS) based on first digit  
+- **Transaction Handler:**  
+  - Prevent external network activity  
+  - Log simulated payment data  
+  - Update `fee_required = false`  
+  - Transition to Resolution Confirmation view  
+
+---
+
+## 4. Simulated AI/Chat Interface
+- **Floating chat modal** available across all public pages  
+- **Contextual Responses:**  
+  - Lookup shipment by name or tracking ID  
+  - Provide status or fee details  
+  - Include small delays to mimic typing  
+
+---
+
+## 5. Deployment Requirements
+- Deployable on **ASGI/WSGI platforms** (Render, Vercel)  
+- SQLite database seeded with **three demo shipments**, at least **one with `fee_required: true`**

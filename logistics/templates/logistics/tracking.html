@@ -1,0 +1,128 @@
+{% extends 'logistics/base.html' %}
+
+{% block title %}Track Your Shipment{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12" x-data="{ tracking: '{{ tracking_id }}' }">
+    
+    {% if not shipment and not error %}
+    <div class="max-w-2xl mx-auto">
+        <div class="glass-morphism rounded-2xl p-8">
+            <h1 class="text-3xl font-bold mb-6 text-center gradient-text">Track Your Shipment</h1>
+            <form method="GET" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tracking Number</label>
+                    <input type="text" 
+                           name="tracking_id" 
+                           x-model="tracking"
+                           placeholder="US-9000-TKG-XXXXXX"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                           required>
+                </div>
+                <button type="submit" class="w-full btn-magnetic text-white font-bold px-6 py-3 rounded-lg">
+                    Track Package
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if error %}
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-red-900/30 border border-red-500 rounded-xl p-6 mb-6">
+            <p class="text-red-300">{{ error }}</p>
+        </div>
+        <div class="glass-morphism rounded-2xl p-8">
+            <form method="GET" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Tracking Number</label>
+                    <input type="text" 
+                           name="tracking_id" 
+                           value="{{ tracking_id }}"
+                           placeholder="US-9000-TKG-XXXXXX"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                           required>
+                </div>
+                <button type="submit" class="w-full btn-magnetic text-white font-bold px-6 py-3 rounded-lg">
+                    Try Again
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if shipment %}
+    <div class="max-w-5xl mx-auto">
+        
+        {% if shipment.fee_required %}
+        <div class="urgency-banner rounded-xl p-6 mb-8 text-center">
+            <p class="text-white font-bold text-xl">⚠️ HOLD: Action Required - Unsettled Import Duty/Processing Fee ⚠️</p>
+            <p class="text-white/90 mt-2">Immediate payment required to release shipment</p>
+        </div>
+        {% endif %}
+        
+        <div class="glass-morphism rounded-2xl p-8 mb-8">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold gradient-text">{{ shipment.tracking_id }}</h1>
+                    <p class="text-gray-400 mt-2">Owner: {{ shipment.owner_name }}</p>
+                </div>
+                <div class="text-right">
+                    <span class="inline-block px-4 py-2 rounded-lg text-sm font-semibold
+                        {% if shipment.status == 'delivered' %}bg-green-900/50 text-green-300
+                        {% elif shipment.status == 'processing_hold' %}bg-red-900/50 text-red-300
+                        {% else %}bg-blue-900/50 text-blue-300{% endif %}">
+                        {{ shipment.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-sm text-gray-400">Current Location</p>
+                    <p class="text-lg font-semibold">{{ shipment.current_location|default:"Processing" }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400">Destination</p>
+                    <p class="text-lg font-semibold">{{ shipment.destination|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-morphism rounded-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Shipment Timeline</h2>
+            <div class="relative pl-16">
+                <div class="timeline-line"></div>
+                {% for event in shipment.history.all %}
+                <div class="relative mb-8 last:mb-0">
+                    <div class="absolute left-[-40px] w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center electric-glow">
+                        <span class="text-xl">✓</span>
+                    </div>
+                    <div class="glass-morphism rounded-lg p-4">
+                        <p class="font-semibold">{{ event.status|title }}</p>
+                        <p class="text-sm text-gray-400">{{ event.location|default:"" }}</p>
+                        <p class="text-sm text-gray-500 mt-1">{{ event.timestamp|date:"M d, Y - H:i" }}</p>
+                        {% if event.description %}
+                        <p class="text-sm text-gray-300 mt-2">{{ event.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% if shipment.fee_required %}
+        <div class="glass-morphism rounded-2xl p-8 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-red-400">Outstanding Fees</h2>
+            <p class="text-4xl font-bold gradient-text mb-6">${{ shipment.fee_amount }}</p>
+            <a href="{% url 'payment_gateway' shipment.tracking_id %}" 
+               class="btn-magnetic text-white font-bold px-10 py-4 rounded-lg text-lg inline-block">
+                Process Payment Now
+            </a>
+        </div>
+        {% endif %}
+        
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

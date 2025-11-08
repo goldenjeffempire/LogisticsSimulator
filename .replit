@@ -18,25 +18,21 @@ args = "server"
 name = "server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python3 -m http.server 5000"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "daphne -b 0.0.0.0 -p 5000 logistics_platform.asgi:application"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 32905
+localPort = 36811
 externalPort = 3000
-
-[[ports]]
-localPort = 39595
-externalPort = 3001
 
 [nix]
 channel = "stable-25_05"

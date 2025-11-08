@@ -1,0 +1,159 @@
+{% extends 'logistics/base.html' %}
+
+{% block title %}Process Payment - {{ shipment.tracking_id }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12" 
+     x-data="{
+         timeRemaining: {{ countdown_seconds }},
+         cardNumber: '',
+         cardholderName: '',
+         expiryDate: '',
+         cvv: '',
+         processing: false,
+         init() {
+             this.startCountdown();
+         },
+         startCountdown() {
+             setInterval(() => {
+                 if (this.timeRemaining > 0) {
+                     this.timeRemaining--;
+                 }
+             }, 1000);
+         },
+         formatTime(seconds) {
+             const mins = Math.floor(seconds / 60);
+             const secs = seconds % 60;
+             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+         },
+         formatCardNumber() {
+             this.cardNumber = this.cardNumber.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+         },
+         async processPayment() {
+             this.processing = true;
+             try {
+                 const response = await fetch('{% url "process_payment" shipment.tracking_id %}', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                         'X-CSRFToken': '{{ csrf_token }}'
+                     },
+                     body: JSON.stringify({
+                         cardholder_name: this.cardholderName,
+                         card_number: this.cardNumber.replace(/\s/g, ''),
+                         expiry_date: this.expiryDate,
+                         cvv: this.cvv
+                     })
+                 });
+                 const data = await response.json();
+                 if (data.success) {
+                     window.location.href = data.redirect_url;
+                 } else {
+                     alert(data.error || 'Payment failed. Please try again.');
+                     this.processing = false;
+                 }
+             } catch (error) {
+                 alert('Payment processing failed. Please try again.');
+                 this.processing = false;
+             }
+         }
+     }">
+    
+    <div class="max-w-3xl mx-auto">
+        <div class="urgency-banner rounded-xl p-6 mb-8 text-center">
+            <p class="text-white font-bold text-xl">⏰ TIME-SENSITIVE PAYMENT REQUIRED ⏰</p>
+            <p class="countdown-timer mt-2" x-text="formatTime(timeRemaining)"></p>
+            <p class="text-white/90 mt-2">Payment window expires in the time shown above</p>
+        </div>
+        
+        <div class="glass-morphism rounded-2xl p-8 mb-8">
+            <h1 class="text-2xl font-bold mb-6 gradient-text">Outstanding Fees - {{ shipment.tracking_id }}</h1>
+            
+            <div class="space-y-4 mb-6">
+                {% for fee in fees %}
+                <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
+                    <span class="font-medium">{{ fee.name }}</span>
+                    <span class="text-lg">${{ fee.amount }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="border-t border-gray-700 pt-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xl font-bold">Total Amount Due</span>
+                    <span class="text-3xl font-bold gradient-text">${{ total_fee }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-morphism rounded-2xl p-8">
+            <h2 class="text-xl font-bold mb-6">Payment Information</h2>
+            
+            <form @submit.prevent="processPayment" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Cardholder Name</label>
+                    <input type="text" 
+                           x-model="cardholderName"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                           placeholder="John A. Doe"
+                           required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Card Number</label>
+                    <input type="text" 
+                           x-model="cardNumber"
+                           @input="formatCardNumber()"
+                           maxlength="19"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                           placeholder="4532 1234 5678 9010"
+                           required>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Expiry Date</label>
+                        <input type="text" 
+                               x-model="expiryDate"
+                               maxlength="5"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                               placeholder="MM/YY"
+                               required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">CVV</label>
+                        <input type="text" 
+                               x-model="cvv"
+                               maxlength="4"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
+                               placeholder="123"
+                               required>
+                    </div>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full btn-magnetic text-white font-bold px-6 py-4 rounded-lg text-lg"
+                        :disabled="processing">
+                    <span x-show="!processing">Process Payment - ${{ total_fee }}</span>
+                    <span x-show="processing">Processing...</span>
+                </button>
+            </form>
+            
+            <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <p class="text-sm text-blue-300">
+                    🔒 Secure payment processing. All transactions are encrypted and simulated for demonstration purposes.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script>
+document.addEventListener('alpine:init', () => {
+    console.log('Alpine.js initialized for payment page');
+});
+</script>
+{% endblock %}
