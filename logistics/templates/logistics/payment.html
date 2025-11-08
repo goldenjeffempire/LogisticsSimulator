@@ -1,6 +1,50 @@
 {% extends 'logistics/base.html' %}
 
-{% block title %}Process Payment - {{ shipment.tracking_id }}{% endblock %}
+{% block title %}Secure Payment - {{ shipment.tracking_id }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-input-group {
+        position: relative;
+    }
+    
+    .card-brand-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 32px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.7;
+    }
+    
+    .payment-secure-badge {
+        animation: secure-pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes secure-pulse {
+        0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+        50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+    }
+    
+    .fee-item-enter {
+        animation: slideInRight 0.4s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-12" 
@@ -12,7 +56,7 @@
          cvv: '',
          processing: false,
          init() {
-             this.startCountdown();
+            this.startCountdown();
          },
          startCountdown() {
              setInterval(() => {
@@ -29,14 +73,27 @@
          formatCardNumber() {
              this.cardNumber = this.cardNumber.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
          },
+         getCardType() {
+             const num = this.cardNumber.replace(/\s/g, '');
+             if (num.startsWith('4')) return 'Visa';
+             if (num.startsWith('5')) return 'Mastercard';
+             if (num.startsWith('3')) return 'Amex';
+             return '';
+         },
          async processPayment() {
+             if (!this.cardholderName || !this.cardNumber || !this.expiryDate || !this.cvv) {
+                 alert('Please fill in all payment fields');
+                 return;
+             }
+             
              this.processing = true;
              try {
+                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
                  const response = await fetch('{% url "process_payment" shipment.tracking_id %}', {
                      method: 'POST',
                      headers: {
                          'Content-Type': 'application/json',
-                         'X-CSRFToken': '{{ csrf_token }}'
+                         'X-CSRFToken': csrfToken
                      },
                      body: JSON.stringify({
                          cardholder_name: this.cardholderName,
@@ -59,101 +116,174 @@
          }
      }">
     
-    <div class="max-w-3xl mx-auto">
-        <div class="urgency-banner rounded-xl p-6 mb-8 text-center">
-            <p class="text-white font-bold text-xl">⏰ TIME-SENSITIVE PAYMENT REQUIRED ⏰</p>
-            <p class="countdown-timer mt-2" x-text="formatTime(timeRemaining)"></p>
-            <p class="text-white/90 mt-2">Payment window expires in the time shown above</p>
-        </div>
-        
-        <div class="glass-morphism rounded-2xl p-8 mb-8">
-            <h1 class="text-2xl font-bold mb-6 gradient-text">Outstanding Fees - {{ shipment.tracking_id }}</h1>
-            
-            <div class="space-y-4 mb-6">
-                {% for fee in fees %}
-                <div class="flex justify-between items-center p-4 bg-white/5 rounded-lg">
-                    <span class="font-medium">{{ fee.name }}</span>
-                    <span class="text-lg">${{ fee.amount }}</span>
+    {% csrf_token %}
+    
+    <div class="max-w-5xl mx-auto">
+        <div class="urgency-banner rounded-3xl p-8 mb-8 text-center relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <svg class="w-10 h-10 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-white font-bold text-3xl">TIME-SENSITIVE PAYMENT</p>
                 </div>
-                {% endfor %}
-            </div>
-            
-            <div class="border-t border-gray-700 pt-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xl font-bold">Total Amount Due</span>
-                    <span class="text-3xl font-bold gradient-text">${{ total_fee }}</span>
-                </div>
+                <div class="countdown-timer mb-3" x-text="formatTime(timeRemaining)"></div>
+                <p class="text-white/90 text-lg">Payment window expires to prevent fraud. Complete payment to release your shipment.</p>
             </div>
         </div>
         
-        <div class="glass-morphism rounded-2xl p-8">
-            <h2 class="text-xl font-bold mb-6">Payment Information</h2>
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div class="glass-morphism rounded-3xl p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold gradient-text">Fee Breakdown</h2>
+                            <p class="text-sm text-gray-400">Shipment {{ shipment.tracking_id }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        {% for fee in fees %}
+                        <div class="fee-item-enter flex justify-between items-center p-4 bg-white/5 hover:bg-white/10 rounded-xl transition" style="animation-delay: {{ forloop.counter|add:"-1"|floatformat:1 }}00ms;">
+                            <div>
+                                <div class="font-semibold text-white">{{ fee.name }}</div>
+                                {% if fee.description %}
+                                <div class="text-sm text-gray-400">{{ fee.description }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-xl font-bold text-blue-400">${{ fee.amount }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="border-t-2 border-gray-700 pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-2xl font-bold">Total Amount Due</span>
+                            <span class="text-4xl font-black gradient-text">${{ total_fee }}</span>
+                        </div>
+                        <div class="payment-secure-badge bg-green-900/30 border border-green-500 rounded-xl p-4">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                                <div>
+                                    <div class="font-semibold text-green-300">Secure Payment Processing</div>
+                                    <div class="text-sm text-green-400/80">256-bit SSL Encryption</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-morphism rounded-2xl p-6">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div>
+                            <h4 class="font-semibold text-blue-300 mb-2">Payment Information</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                This is a simulated payment for demonstration purposes. No actual charges will be made. All payment data is encrypted and securely processed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
-            <form @submit.prevent="processPayment" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium mb-2">Cardholder Name</label>
-                    <input type="text" 
-                           x-model="cardholderName"
-                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
-                           placeholder="John A. Doe"
-                           required>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-2">Card Number</label>
-                    <input type="text" 
-                           x-model="cardNumber"
-                           @input="formatCardNumber()"
-                           maxlength="19"
-                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
-                           placeholder="4532 1234 5678 9010"
-                           required>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Expiry Date</label>
-                        <input type="text" 
-                               x-model="expiryDate"
-                               maxlength="5"
-                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
-                               placeholder="MM/YY"
-                               required>
+            <div class="glass-morphism rounded-3xl p-8">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                        </svg>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-2">CVV</label>
-                        <input type="text" 
-                               x-model="cvv"
-                               maxlength="4"
-                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 outline-none focus:border-blue-500 transition"
-                               placeholder="123"
-                               required>
+                        <h2 class="text-2xl font-bold gradient-text">Payment Method</h2>
+                        <p class="text-sm text-gray-400">Enter your card details</p>
                     </div>
                 </div>
                 
-                <button type="submit" 
-                        class="w-full btn-magnetic text-white font-bold px-6 py-4 rounded-lg text-lg"
-                        :disabled="processing">
-                    <span x-show="!processing">Process Payment - ${{ total_fee }}</span>
-                    <span x-show="processing">Processing...</span>
-                </button>
-            </form>
-            
-            <div class="mt-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                <p class="text-sm text-blue-300">
-                    🔒 Secure payment processing. All transactions are encrypted and simulated for demonstration purposes.
-                </p>
+                <form @submit.prevent="processPayment" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold mb-3 text-gray-300">Cardholder Name</label>
+                        <input type="text" 
+                               x-model="cardholderName"
+                               class="w-full bg-gray-800/50 border-2 border-gray-700 rounded-xl px-6 py-4 outline-none focus:border-blue-500 focus:bg-gray-800 transition text-lg"
+                               placeholder="John A. Doe"
+                               required>
+                    </div>
+                    
+                    <div class="card-input-group">
+                        <label class="block text-sm font-semibold mb-3 text-gray-300">Card Number</label>
+                        <input type="text" 
+                               x-model="cardNumber"
+                               @input="formatCardNumber()"
+                               maxlength="19"
+                               class="w-full bg-gray-800/50 border-2 border-gray-700 rounded-xl px-6 py-4 outline-none focus:border-blue-500 focus:bg-gray-800 transition text-lg"
+                               placeholder="4532 1234 5678 9010"
+                               required>
+                        <div class="absolute right-4 top-12 text-sm text-gray-400 font-semibold" x-text="getCardType()"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-gray-300">Expiry Date</label>
+                            <input type="text" 
+                                   x-model="expiryDate"
+                                   @input="expiryDate = expiryDate.replace(/^(\d{2})(\d)/, '$1/$2').slice(0,5)"
+                                   maxlength="5"
+                                   class="w-full bg-gray-800/50 border-2 border-gray-700 rounded-xl px-6 py-4 outline-none focus:border-blue-500 focus:bg-gray-800 transition text-lg"
+                                   placeholder="MM/YY"
+                                   required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-gray-300">CVV</label>
+                            <input type="text" 
+                                   x-model="cvv"
+                                   maxlength="4"
+                                   class="w-full bg-gray-800/50 border-2 border-gray-700 rounded-xl px-6 py-4 outline-none focus:border-blue-500 focus:bg-gray-800 transition text-lg"
+                                   placeholder="123"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" 
+                                class="w-full btn-magnetic text-white font-bold px-6 py-5 rounded-xl text-xl group relative overflow-hidden"
+                                :disabled="processing">
+                            <span x-show="!processing" class="flex items-center justify-center gap-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                                Process Secure Payment - ${{ total_fee }}
+                                <svg class="w-5 h-5 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </span>
+                            <span x-show="processing" class="flex items-center justify-center gap-3">
+                                <svg class="animate-spin w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing Payment...
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center justify-center gap-6 pt-4">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/120px-Visa_Inc._logo.svg.png" alt="Visa" class="h-8 opacity-60">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/120px-Mastercard-logo.svg.png" alt="Mastercard" class="h-8 opacity-60">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/American_Express_logo_%282018%29.svg/120px-American_Express_logo_%282018%29.svg.png" alt="Amex" class="h-8 opacity-60">
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-{% load static %}
-<script>
-document.addEventListener('alpine:init', () => {
-    console.log('Alpine.js initialized for payment page');
-});
-</script>
 {% endblock %}

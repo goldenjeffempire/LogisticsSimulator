@@ -62,7 +62,6 @@ def payment_gateway(request, tracking_id):
     return render(request, 'logistics/payment.html', context)
 
 
-@csrf_exempt
 def process_payment(request, tracking_id):
     """Process simulated payment transaction"""
     if request.method != 'POST':
@@ -78,10 +77,16 @@ def process_payment(request, tracking_id):
         if len(card_number) < 4:
             return JsonResponse({'error': 'Invalid card number'}, status=400)
         
+        fees = shipment.fees.all()
+        total_fee = sum(fee.amount for fee in fees)
+        
+        if total_fee == 0:
+            total_fee = shipment.fee_amount
+        
         transaction = PaymentTransaction.objects.create(
             shipment=shipment,
             transaction_id=PaymentTransaction.generate_transaction_id(),
-            amount=shipment.fee_amount,
+            amount=total_fee,
             cardholder_name=cardholder_name,
             card_last_four=card_number[-4:],
             status='completed',
@@ -95,12 +100,13 @@ def process_payment(request, tracking_id):
         ShipmentHistory.objects.create(
             shipment=shipment,
             status='payment_completed',
-            description=f'Payment of ${shipment.fee_amount} processed successfully'
+            description=f'Payment of ${total_fee} processed successfully'
         )
         
         return JsonResponse({
             'success': True,
             'transaction_id': transaction.transaction_id,
+            'amount': str(total_fee),
             'redirect_url': f'/tracking/{tracking_id}/confirmation/'
         })
         
