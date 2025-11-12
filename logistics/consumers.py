@@ -26,13 +26,13 @@ class TrackingConsumer(AsyncWebsocketConsumer):
                 'message': f'Connected to tracking {self.tracking_id}'
             }))
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
         data = json.loads(text_data)
         message_type = data.get('type')
 
@@ -67,10 +67,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': 'Welcome to Global Logistics Support! How can I assist you today?'
         }))
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         pass
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
         data = json.loads(text_data)
         message = data.get('message', '').lower()
         

@@ -31,7 +31,16 @@
          selectedShipment: null,
          showFeeForm: false,
          searchQuery: '',
-         filterStatus: 'all'
+         filterStatus: 'all',
+         confirmDelete(shipmentId) {
+             if (confirm('Delete this shipment permanently?')) {
+                 const form = document.createElement('form');
+                 form.method = 'POST';
+                 form.innerHTML = '{% csrf_token %}<input type=hidden name=action value=delete_shipment><input type=hidden name=shipment_id value=' + shipmentId + '>';
+                 document.body.appendChild(form);
+                 form.submit();
+             }
+         }
      }">
     
     <div class="max-w-7xl mx-auto">
@@ -328,7 +337,7 @@
                                     Update Shipment
                                 </button>
                                 <button type="button" 
-                                        @click="if(confirm('Delete this shipment permanently?')) { const form = document.createElement('form'); form.method = 'POST'; form.innerHTML = '{% csrf_token %}<input type=hidden name=action value=delete_shipment><input type=hidden name=shipment_id value={{ shipment.id }}>'; document.body.appendChild(form); form.submit(); }"
+                                        @click="confirmDelete({{ shipment.id }})"
                                         class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl transition">
                                     Delete
                                 </button>

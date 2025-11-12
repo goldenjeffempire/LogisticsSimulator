@@ -1,5 +1,8 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from decimal import Decimal
 import random
 import string
 
@@ -27,7 +30,7 @@ class Shipment(models.Model):
     destination = models.CharField(max_length=200, blank=True, null=True)
     
     fee_required = models.BooleanField(default=False)
-    fee_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    fee_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))])
     
     weight = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
     dimensions = models.CharField(max_length=100, blank=True, null=True)
@@ -63,9 +66,14 @@ class ShipmentFee(models.Model):
     
     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, related_name='fees')
     name = models.CharField(max_length=100)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def clean(self):
+        """Validate fee data"""
+        if self.amount < 0:
+            raise ValidationError({'amount': 'Fee amount cannot be negative'})
     
     class Meta:
         ordering = ['created_at']
@@ -102,7 +110,7 @@ class PaymentTransaction(models.Model):
     
     shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, related_name='payments')
     transaction_id = models.CharField(max_length=100, unique=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
     cardholder_name = models.CharField(max_length=200)

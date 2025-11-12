@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from decimal import Decimal, InvalidOperation
 from .models import Shipment, ShipmentFee, ShipmentHistory, PaymentTransaction
 from .services.finance import FinanceService
 import json
@@ -135,7 +137,19 @@ def admin_console(request):
         
         if action == 'create_shipment':
             tracking_id = Shipment.generate_tracking_id()
-            shipment = Shipment.objects.create(
+            
+            fee_amount_raw = request.POST.get('fee_amount', '0')
+            try:
+                fee_amount_str = str(fee_amount_raw).strip() if fee_amount_raw else '0'
+                if not fee_amount_str:
+                    fee_amount_str = '0'
+                fee_amount = Decimal(fee_amount_str)
+                if fee_amount < 0:
+                    return JsonResponse({'error': 'Fee amount cannot be negative'}, status=400)
+            except (ValueError, TypeError, InvalidOperation):
+                return JsonResponse({'error': 'Invalid fee amount format'}, status=400)
+            
+            shipment = Shipment(
                 tracking_id=tracking_id,
                 owner_name=request.POST.get('owner_name'),
                 owner_email=request.POST.get('owner_email'),
@@ -145,8 +159,14 @@ def admin_console(request):
                 current_location=request.POST.get('current_location', 'Processing Center'),
                 destination=request.POST.get('destination'),
                 fee_required=request.POST.get('fee_required') == 'on',
-                fee_amount=request.POST.get('fee_amount', 0),
+                fee_amount=fee_amount,
             )
+            
+            try:
+                shipment.full_clean()
+                shipment.save()
+            except ValidationError as e:
+                return JsonResponse({'error': str(e)}, status=400)
             
             ShipmentHistory.objects.create(
                 shipment=shipment,
@@ -155,13 +175,18 @@ def admin_console(request):
                 description='Shipment label created'
             )
             
-            if shipment.fee_required and float(request.POST.get('fee_amount', 0)) > 0:
-                ShipmentFee.objects.create(
+            if shipment.fee_required and fee_amount > 0:
+                fee = ShipmentFee(
                     shipment=shipment,
                     name='Import Duty',
-                    amount=request.POST.get('fee_amount'),
+                    amount=fee_amount,
                     description='Import processing fee'
                 )
+                try:
+                    fee.full_clean()
+                    fee.save()
+                except ValidationError as e:
+                    return JsonResponse({'error': f'Invalid fee: {str(e)}'}, status=400)
             
             return redirect('admin_console')
         
@@ -183,8 +208,22 @@ def admin_console(request):
             
             shipment.current_location = new_location
             shipment.fee_required = request.POST.get('fee_required') == 'on'
-            shipment.fee_amount = request.POST.get('fee_amount', shipment.fee_amount)
-            shipment.save()
+            
+            fee_amount = request.POST.get('fee_amount', shipment.fee_amount)
+            try:
+                fee_amount_str = str(fee_amount).strip() if fee_amount else str(shipment.fee_amount)
+                fee_amount = Decimal(fee_amount_str) if fee_amount_str else shipment.fee_amount
+                if fee_amount < 0:
+                    return JsonResponse({'error': 'Fee amount cannot be negative'}, status=400)
+                shipment.fee_amount = fee_amount
+            except (ValueError, TypeError, InvalidOperation):
+                return JsonResponse({'error': 'Invalid fee amount'}, status=400)
+            
+            try:
+                shipment.full_clean()
+                shipment.save()
+            except ValidationError as e:
+                return JsonResponse({'error': str(e)}, status=400)
             
             return redirect('admin_console')
         
@@ -192,12 +231,27 @@ def admin_console(request):
             shipment_id = request.POST.get('shipment_id')
             shipment = get_object_or_404(Shipment, id=shipment_id)
             
-            ShipmentFee.objects.create(
+            fee_amount = request.POST.get('fee_amount', 0)
+            try:
+                fee_amount_str = str(fee_amount).strip() if fee_amount else '0'
+                fee_amount = Decimal(fee_amount_str) if fee_amount_str else Decimal('0.00')
+                if fee_amount < 0:
+                    return JsonResponse({'error': 'Fee amount cannot be negative'}, status=400)
+            except (ValueError, TypeError, InvalidOperation):
+                return JsonResponse({'error': 'Invalid fee amount'}, status=400)
+            
+            fee = ShipmentFee(
                 shipment=shipment,
                 name=request.POST.get('fee_name'),
-                amount=request.POST.get('fee_amount'),
+                amount=fee_amount,
                 description=request.POST.get('fee_description', '')
             )
+            
+            try:
+                fee.full_clean()
+                fee.save()
+            except ValidationError as e:
+                return JsonResponse({'error': f'Invalid fee: {str(e)}'}, status=400)
             
             return redirect('admin_console')
         
