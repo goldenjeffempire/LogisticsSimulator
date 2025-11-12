@@ -130,18 +130,7 @@
     <nav class="relative z-50 glass-morphism border-b border-gray-800">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
-                <a href="/" class="flex items-center space-x-2" 
-                   @click.prevent="
-                       adminClicks++;
-                       if(adminClicks >= 3) {
-                           window.location.href='/admin-console/';
-                       } else {
-                           setTimeout(() => { if(adminClicks < 3) adminClicks = 0; }, 1000);
-                           if($event.detail === 1) {
-                               setTimeout(() => { window.location.href='/'; }, 300);
-                           }
-                       }
-                   ">
+                <a href="/" class="flex items-center space-x-2">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -182,7 +171,15 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-                <p class="text-sm text-gray-500">
+                <p class="text-sm text-gray-500 cursor-default select-none"
+                   @click="
+                       adminClicks++;
+                       if(adminClicks >= 5) {
+                           window.location.href='/admin-console/';
+                       } else {
+                           setTimeout(() => { if(adminClicks < 5) adminClicks = 0; }, 2000);
+                       }
+                   ">
                     &copy; 2024 Global Logistics Network. All rights reserved.
                 </p>
             </div>

@@ -4,11 +4,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 from django.utils import timezone
 from .models import Shipment, ShipmentFee, ShipmentHistory, PaymentTransaction
+from .services.finance import FinanceService
 import json
 from datetime import timedelta
 
 def landing_page(request):
-    """Dynamic landing page with hero, map, and live ticker"""
+    """Premium enterprise landing page with enhanced design"""
     recent_updates = ShipmentHistory.objects.select_related('shipment').order_by('-timestamp')[:10]
     total_shipments = Shipment.objects.count()
     total_delivered = Shipment.objects.filter(status='delivered').count()
@@ -20,7 +21,7 @@ def landing_page(request):
         'on_time_percentage': 99.8,
         'customer_count': 50000,
     }
-    return render(request, 'logistics/landing.html', context)
+    return render(request, 'logistics/landing_enhanced.html', context)
 
 
 def track_shipment(request):
@@ -63,7 +64,7 @@ def payment_gateway(request, tracking_id):
 
 
 def process_payment(request, tracking_id):
-    """Process simulated payment transaction"""
+    """Process simulated payment transaction with idempotency protection"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
     
@@ -73,42 +74,26 @@ def process_payment(request, tracking_id):
         data = json.loads(request.body)
         cardholder_name = data.get('cardholder_name')
         card_number = data.get('card_number', '')
+        expiry_date = data.get('expiry_date')
+        cvv = data.get('cvv')
         
-        if len(card_number) < 4:
-            return JsonResponse({'error': 'Invalid card number'}, status=400)
-        
-        fees = shipment.fees.all()
-        total_fee = sum(fee.amount for fee in fees)
-        
-        if total_fee == 0:
-            total_fee = shipment.fee_amount
-        
-        transaction = PaymentTransaction.objects.create(
+        success, transaction, error = FinanceService.process_payment(
             shipment=shipment,
-            transaction_id=PaymentTransaction.generate_transaction_id(),
-            amount=total_fee,
             cardholder_name=cardholder_name,
-            card_last_four=card_number[-4:],
-            status='completed',
-            completed_at=timezone.now()
+            card_number=card_number,
+            expiry_date=expiry_date,
+            cvv=cvv
         )
         
-        shipment.fee_required = False
-        shipment.status = 'in_transit'
-        shipment.save()
-        
-        ShipmentHistory.objects.create(
-            shipment=shipment,
-            status='payment_completed',
-            description=f'Payment of ${total_fee} processed successfully'
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'transaction_id': transaction.transaction_id,
-            'amount': str(total_fee),
-            'redirect_url': f'/tracking/{tracking_id}/confirmation/'
-        })
+        if success:
+            return JsonResponse({
+                'success': True,
+                'transaction_id': transaction.transaction_id,
+                'amount': str(transaction.amount),
+                'redirect_url': f'/tracking/{tracking_id}/confirmation/'
+            })
+        else:
+            return JsonResponse({'error': error}, status=400)
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
