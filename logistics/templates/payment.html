@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen gradient-animate py-12" x-data="{ 
+    showChat: false, 
+    show2FA: false, 
+    chatMessages: [],
+    timeLeft: 300,
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    init() {
+        this.countdown();
+        this.chatMessages = [
+            { type: 'agent', text: 'Hi! I\'m here to help with your payment. How can I assist you today?', delay: 1000 }
+        ];
+    },
+    countdown() {
+        setInterval(() => {
+            if (this.timeLeft > 0) this.timeLeft--;
+        }, 1000);
+    },
+    formatTime() {
+        const mins = Math.floor(this.timeLeft / 60);
+        const secs = this.timeLeft % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    },
+    getTimerColor() {
+        if (this.timeLeft < 60) return 'text-red-500';
+        if (this.timeLeft < 180) return 'text-orange-500';
+        return 'text-cyan-400';
+    },
+    submitPayment() {
+        this.show2FA = true;
+    },
+    verify2FA() {
+        alert('Payment processed successfully! Your shipment will be released shortly.');
+        window.location.href = '/track/{{ shipment.tracking_number }}/';
+    },
+    toggleChat() {
+        this.showChat = !this.showChat;
+        if (this.showChat && this.chatMessages.length === 1) {
+            setTimeout(() => {
+                this.chatMessages.push({ 
+                    type: 'agent', 
+                    text: 'I see you\'re clearing fees for tracking {{ shipment.tracking_number }}. The total is ${{ shipment.total_amount }}. Do you have any questions about the fees?'
+                });
+            }, 2000);
+        }
+    },
+    sendMessage(text) {
+        this.chatMessages.push({ type: 'user', text: text });
+        setTimeout(() => {
+            const responses = [
+                'All fees are standard customs and processing charges.',
+                'Your payment will be processed securely and your shipment released immediately.',
+                'We accept all major credit cards. Your information is encrypted with 256-bit SSL.'
+            ];
+            this.chatMessages.push({ 
+                type: 'agent', 
+                text: responses[Math.floor(Math.random() * responses.length)]
+            });
+        }, 1500);
+    }
+}">
+    <div class="container mx-auto px-6 max-w-4xl">
+        <div class="pulse-alert glass rounded-2xl p-6 mb-8 border-2 border-orange-500">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-orange-400 mb-2">⏰ TIME-SENSITIVE PAYMENT REQUIRED</h1>
+                <div class="text-5xl font-bold mb-2" :class="getTimerColor()" x-text="formatTime()"></div>
+                <p class="text-gray-300">Complete payment to avoid shipment return</p>
+            </div>
+        </div>
+        
+        <div class="glass rounded-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6 text-cyan-400">Payment Invoice</h2>
+            
+            <div class="bg-slate-800/50 rounded-xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-700">
+                    <span class="text-gray-400">Tracking Number:</span>
+                    <span class="text-white font-mono">{{ shipment.tracking_number }}</span>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4 text-cyan-400">Fee Breakdown</h3>
+                <div class="space-y-3">
+                    {% for fee in shipment.fees %}
+                    <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                        <div>
+                            <p class="text-gray-300 font-medium">{{ fee.name }}</p>
+                            <p class="text-gray-500 text-sm">Required for customs clearance</p>
+                        </div>
+                        <span class="text-white font-semibold text-lg">${{ fee.amount }}</span>
+                    </div>
+                    {% endfor %}
+                    <div class="flex justify-between items-center py-4 border-t-2 border-cyan-500/30 mt-4">
+                        <span class="text-2xl font-bold text-cyan-400">Total Amount Due</span>
+                        <span class="text-3xl font-bold text-cyan-400">${{ shipment.total_amount }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-800/50 rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4 text-white">Payment Information</h3>
+                <form @submit.prevent="submitPayment" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Card Number</label>
+                        <input 
+                            type="text" 
+                            x-model="cardNumber"
+                            placeholder="1234 5678 9012 3456"
+                            class="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 text-white"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Expiry Date</label>
+                            <input 
+                                type="text" 
+                                x-model="expiryDate"
+                                placeholder="MM/YY"
+                                class="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 text-white"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">CVV</label>
+                            <input 
+                                type="text" 
+                                x-model="cvv"
+                                placeholder="123"
+                                maxlength="3"
+                                class="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 text-white"
+                                required
+                            />
+                        </div>
+                    </div>
+                    
+                    <button 
+                        type="submit"
+                        class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-xl font-bold text-white transition transform hover:scale-105 glow text-lg"
+                    >
+                        PAY ${{ shipment.total_amount }} NOW
+                    </button>
+                </form>
+                
+                <div class="flex items-center justify-center space-x-4 mt-6">
+                    <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <p class="text-gray-400 text-sm">256-bit SSL Encrypted • PCI DSS Compliant</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div 
+        x-show="show2FA" 
+        x-cloak
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        @click.self="show2FA = false"
+    >
+        <div class="glass rounded-2xl p-8 max-w-md w-full glow" @click.stop>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-cyan-400 mb-2">Security Verification Required</h2>
+                <p class="text-gray-400">Enter the 6-digit code sent to your device</p>
+            </div>
+            
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    placeholder="000000"
+                    maxlength="6"
+                    class="w-full px-6 py-4 rounded-xl bg-slate-700 border border-cyan-500/30 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 text-white text-center text-2xl font-mono tracking-widest"
+                />
+                
+                <button 
+                    @click="verify2FA"
+                    class="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-bold text-white transition transform hover:scale-105 glow"
+                >
+                    Verify & Complete Payment
+                </button>
+                
+                <button 
+                    @click="show2FA = false"
+                    class="w-full py-3 text-gray-400 hover:text-white transition"
+                >
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="fixed bottom-6 right-6 z-40">
+        <button 
+            @click="toggleChat"
+            class="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center glow hover:scale-110 transition transform shadow-2xl"
+        >
+            <svg x-show="!showChat" class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"></path>
+            </svg>
+            <svg x-show="showChat" class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+        
+        <div 
+            x-show="showChat" 
+            x-cloak
+            x-transition
+            class="absolute bottom-20 right-0 w-96 glass rounded-2xl shadow-2xl overflow-hidden"
+        >
+            <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-4">
+                <h3 class="text-white font-bold text-lg">Live Support</h3>
+                <p class="text-cyan-100 text-sm">Online • Response time: ~2 minutes</p>
+            </div>
+            
+            <div class="p-4 h-80 overflow-y-auto bg-slate-800/90">
+                <template x-for="(msg, index) in chatMessages" :key="index">
+                    <div :class="msg.type === 'agent' ? 'mb-4' : 'mb-4 flex justify-end'">
+                        <div :class="msg.type === 'agent' ? 'bg-slate-700 p-3 rounded-lg max-w-xs' : 'bg-cyan-600 p-3 rounded-lg max-w-xs'">
+                            <p class="text-white text-sm" x-text="msg.text"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <div class="p-4 border-t border-slate-700 bg-slate-800/90">
+                <form @submit.prevent="sendMessage($event.target.message.value); $event.target.message.value = ''" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        name="message"
+                        placeholder="Type your message..."
+                        class="flex-1 px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white text-sm"
+                    />
+                    <button 
+                        type="submit"
+                        class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-white transition"
+                    >
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}

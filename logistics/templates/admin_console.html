@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen gradient-animate py-12" x-data="{
+    shipments: [],
+    editingShipment: null,
+    showCreateForm: false,
+    newShipment: { owner_name: '', origin: '', destination: '', status: 'In Transit' },
+    
+    async loadShipments() {
+        try {
+            const response = await fetch('/api/shipments/');
+            this.shipments = await response.json();
+        } catch (error) {
+            console.error('Error loading shipments:', error);
+        }
+    },
+    
+    async createShipment() {
+        try {
+            const response = await fetch('/api/shipments/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify(this.newShipment)
+            });
+            const shipment = await response.json();
+            await this.loadShipments();
+            this.showCreateForm = false;
+            this.newShipment = { owner_name: '', origin: '', destination: '', status: 'In Transit' };
+            alert(`Shipment created! Tracking: ${shipment.tracking_number}`);
+        } catch (error) {
+            console.error('Error creating shipment:', error);
+        }
+    },
+    
+    async updateShipment(id, data) {
+        try {
+            await fetch(`/api/shipments/${id}/`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify(data)
+            });
+            await this.loadShipments();
+            this.editingShipment = null;
+        } catch (error) {
+            console.error('Error updating shipment:', error);
+        }
+    },
+    
+    async deleteShipment(id) {
+        if (!confirm('Are you sure you want to delete this shipment?')) return;
+        try {
+            await fetch(`/api/shipments/${id}/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                }
+            });
+            await this.loadShipments();
+        } catch (error) {
+            console.error('Error deleting shipment:', error);
+        }
+    },
+    
+    async toggleFeeRequired(shipment) {
+        await this.updateShipment(shipment.id, { 
+            fee_required: !shipment.fee_required 
+        });
+    },
+    
+    editFees(shipment) {
+        this.editingShipment = shipment;
+    },
+    
+    addFee(shipment) {
+        if (!shipment.fees) shipment.fees = [];
+        shipment.fees.push({ name: 'New Fee', amount: 0 });
+    },
+    
+    removeFee(shipment, index) {
+        shipment.fees.splice(index, 1);
+    },
+    
+    async saveFees(shipment) {
+        await this.updateShipment(shipment.id, { fees: shipment.fees });
+    }
+}" x-init="loadShipments()">
+    <div class="container mx-auto px-6">
+        <div class="glass rounded-2xl p-8 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-2">
+                        🔐 Admin Console
+                    </h1>
+                    <p class="text-gray-400">Shipment Management & Fee Configuration</p>
+                </div>
+                <button 
+                    @click="showCreateForm = !showCreateForm"
+                    class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 rounded-xl font-semibold text-white transition transform hover:scale-105 glow"
+                >
+                    + New Shipment
+                </button>
+            </div>
+            
+            <div x-show="showCreateForm" x-cloak class="bg-slate-800/50 rounded-xl p-6 mb-6">
+                <h3 class="text-xl font-semibold mb-4 text-cyan-400">Create New Shipment</h3>
+                <form @submit.prevent="createShipment" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Owner Name</label>
+                            <input 
+                                type="text" 
+                                x-model="newShipment.owner_name"
+                                class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Status</label>
+                            <input 
+                                type="text" 
+                                x-model="newShipment.status"
+                                class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Origin</label>
+                            <input 
+                                type="text" 
+                                x-model="newShipment.origin"
+                                class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-gray-400 text-sm mb-2">Destination</label>
+                            <input 
+                                type="text" 
+                                x-model="newShipment.destination"
+                                class="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white"
+                            />
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <button 
+                            type="submit"
+                            class="px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white font-semibold transition"
+                        >
+                            Create Shipment
+                        </button>
+                        <button 
+                            type="button"
+                            @click="showCreateForm = false"
+                            class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="space-y-4">
+            <template x-for="shipment in shipments" :key="shipment.id">
+                <div class="glass rounded-xl p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-cyan-400" x-text="shipment.tracking_number"></h3>
+                            <p class="text-gray-400" x-text="shipment.owner_name"></p>
+                            <p class="text-gray-500 text-sm" x-text="`${shipment.origin} → ${shipment.destination}`"></p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    :checked="shipment.fee_required"
+                                    @change="toggleFeeRequired(shipment)"
+                                    class="w-5 h-5 rounded border-gray-600 text-cyan-500 focus:ring-cyan-400"
+                                />
+                                <span class="text-white font-semibold">Fee Required</span>
+                            </label>
+                            <button 
+                                @click="deleteShipment(shipment.id)"
+                                class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm transition"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-800/50 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-semibold text-white">Fee Configuration</h4>
+                            <button 
+                                @click="editFees(shipment)"
+                                class="text-cyan-400 hover:text-cyan-300 text-sm font-semibold"
+                            >
+                                Edit Fees
+                            </button>
+                        </div>
+                        
+                        <div x-show="editingShipment && editingShipment.id === shipment.id" x-cloak class="space-y-3 mb-4">
+                            <template x-for="(fee, index) in shipment.fees" :key="index">
+                                <div class="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        x-model="fee.name"
+                                        placeholder="Fee Name"
+                                        class="flex-1 px-3 py-2 rounded bg-slate-700 border border-slate-600 text-white text-sm"
+                                    />
+                                    <input 
+                                        type="number" 
+                                        x-model="fee.amount"
+                                        step="0.01"
+                                        placeholder="Amount"
+                                        class="w-32 px-3 py-2 rounded bg-slate-700 border border-slate-600 text-white text-sm"
+                                    />
+                                    <button 
+                                        @click="removeFee(shipment, index)"
+                                        class="px-3 py-2 bg-red-600 hover:bg-red-500 rounded text-white text-sm"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </template>
+                            <div class="flex gap-2">
+                                <button 
+                                    @click="addFee(shipment)"
+                                    class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded text-white text-sm"
+                                >
+                                    + Add Fee
+                                </button>
+                                <button 
+                                    @click="saveFees(shipment)"
+                                    class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded text-white text-sm"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <template x-for="fee in shipment.fees" :key="fee.name">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-400" x-text="fee.name"></span>
+                                    <span class="text-white font-semibold" x-text="`$${fee.amount}`"></span>
+                                </div>
+                            </template>
+                            <div class="flex justify-between text-base font-bold border-t border-slate-700 pt-2 mt-2">
+                                <span class="text-cyan-400">Total</span>
+                                <span class="text-cyan-400" x-text="`$${shipment.total_amount}`"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a 
+                            :href="`/track/${shipment.tracking_number}/`"
+                            target="_blank"
+                            class="text-cyan-400 hover:text-cyan-300 text-sm font-semibold"
+                        >
+                            View Tracking Page →
+                        </a>
+                        <a 
+                            :href="`/payment/${shipment.tracking_number}/`"
+                            target="_blank"
+                            class="text-orange-400 hover:text-orange-300 text-sm font-semibold"
+                        >
+                            View Payment Page →
+                        </a>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}

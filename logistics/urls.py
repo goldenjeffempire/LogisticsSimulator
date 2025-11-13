@@ -1,12 +1,14 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+
+router = DefaultRouter()
+router.register(r'shipments', views.ShipmentViewSet)
 
 urlpatterns = [
     path('', views.landing_page, name='landing'),
-    path('track/', views.track_shipment, name='track_shipment'),
-    path('tracking/<str:tracking_id>/payment/', views.payment_gateway, name='payment_gateway'),
-    path('tracking/<str:tracking_id>/process-payment/', views.process_payment, name='process_payment'),
-    path('tracking/<str:tracking_id>/confirmation/', views.tracking_confirmation, name='tracking_confirmation'),
-    path('admin-console/', views.admin_console, name='admin_console'),
-    path('chat/', views.chat_interface, name='chat'),
+    path('track/<str:tracking_number>/', views.track_shipment, name='track'),
+    path('payment/<str:tracking_number>/', views.payment_page, name='payment'),
+    path('admin-sim/', views.admin_console, name='admin_console'),
+    path('api/', include(router.urls)),
 ]

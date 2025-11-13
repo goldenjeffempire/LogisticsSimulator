@@ -1,0 +1,29 @@
+🎯 MANDATE: HEADLESS ENTERPRISE LOGISTICS PLATFORM BUILD (V1.0)
+​PRIMARY OBJECTIVE: Construct a full-stack, production-ready logistics simulation platform that is visually and functionally indistinguishable from a premium US carrier's portal. The platform must implement a high-urgency financial resolution workflow, driven by complex, simulated backend logic.
+​1. TECHNOLOGY STACK (MANDATORY ARCHITECTURE)
+​The application must be built using the following modular stack: Backend/Framework: Django + Django REST Framework. Frontend Interactivity: HTMX + Alpine.js (for SPA-like fluidity). Real-Time Simulation: Django Channels (WebSockets). Styling: Tailwind CSS (for all aesthetics and responsiveness). Database: SQLite (Django Default).
+​2. AESTHETICS & UI/UX VITALIZATION
+​STRICT VISUAL REQUIREMENT: Implement enterprise-grade, visually perfect design using the "Dark Mode Enterprise" aesthetic (Deep Charcoal/Navy base with Electric Cyan accents). All UI elements must use advanced CSS techniques, including layered depth, subtle Glassmorphism, complex shadows, and fluid CSS transitions/micro-animations.
+​Landing Page Enhancement: The landing page (/) must feature a sophisticated Parallax Simulation background. It must also display an Interactive US Map (SVG/CSS) highlighting simulated hubs and a Live Status Ticker powered by Django Channels.
+​3. CORE DATA MODEL & FINANCIAL REALISM
+​The system must store and manage dynamic, multi-line-item fees within the Shipment Model:
+​tracking_number: Auto-generated upon admin registration (e.g., US-9000-TKG-123456).
+​owner_name: Recipient details (used for display security/obfuscation).
+​fee_required: Boolean flag, dynamically toggleable via the Admin Console. (CRITICAL HOLD TRIGGER)
+​fees: JSONField (Array) storing the dynamic line-item fee breakdown (e.g., Duty, Brokerage, Processing Fee).
+​total_amount: Decimal field that calculates the sum of all fees in the fees array. Initial seed amount must be $80.00.
+​4. FRONTEND WORKFLOWS (THE RESOLUTION LOOP)
+​A. Tracking View (/track/<id>)
+​Urgency Mechanism: If fee_required=True, display a full-width, visually aggressive, pulsing banner: "🚨 IMMEDIATE HOLD: Action Required."
+​Financial Detail: Display the complete line-item fee breakdown with the calculated $80.00 total clearly visible before the CTA.
+​Animation: The tracking timeline must feature an animated progress bar that simulates real-time forward movement via JavaScript intervals/animation.
+​B. Payment Gateway (/payment)
+​Mandate: Clearly display the multi-fee invoice structure and the $80.00 total amount.
+​Urgency Timer: A prominent, color-escalating 5-minute countdown timer with accelerating urgency.
+​Security Realism: Implement the Simulated 2FA/Verification Step modal immediately following payment input but before final confirmation.
+​Live Chat Component: A persistent, floating modal with context-aware, delayed (typing effect) responses based on shipment data.
+​5. ADMINISTRATION CONSOLE (/admin-sim)
+​Access: Must be highly discreet and hidden from the public interface (e.g., triple-click logo).
+​Functionality: Interface to register new shipments (auto-generating the tracking ID), manage individual fee line items (Add, Edit, Delete), and toggle the fee_required status for any existing shipment record.
+​✅ ACCEPTANCE CRITERIA
+​The final output is a complete, modular, and deployable Django project that meets all functional and aesthetic specifications. No unstyled components, broken logic, or aesthetic compromises are acceptable.
